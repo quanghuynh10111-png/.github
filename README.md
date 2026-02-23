@@ -1,13 +1,13 @@
 # Python Unified System
 
-Kho mẫu để **hợp nhất mã nguồn Python thành một hệ thống thống nhất** và hỗ trợ đồng bộ hóa các nền tảng: **GitHub, ChatGPT, OpenAI, Codex, MDN Plus**.
+Kho mẫu để **hợp nhất mã nguồn Python thành một hệ thống thống nhất** và đồng bộ hóa nhiều nền tảng: **GitHub, ChatGPT, OpenAI, Codex, MDN Plus**.
 
-## Ý tưởng
+## Điểm chính
 
-- Tất cả module nội bộ đăng ký qua `ModuleRegistry`.
-- Mọi lời gọi chạy qua `UnifiedSystem` để thống nhất điểm điều phối.
-- Danh sách provider (GitHub/ChatGPT/OpenAI/Codex/MDN Plus) quản lý tập trung.
-- Có API `sync_provider` và `sync_all` để đồng bộ hóa theo từng provider hoặc toàn bộ.
+- `ModuleRegistry`: đăng ký và điều phối module nội bộ.
+- `UnifiedSystem`: facade duy nhất để chạy module + đồng bộ provider.
+- `Provider` + `SyncRecord`: mô hình dữ liệu rõ ràng cho các tích hợp.
+- `DEFAULT_PROVIDERS`: danh sách provider mặc định ổn định để đồng bộ hóa nhất quán.
 
 ## Provider mặc định
 
@@ -23,8 +23,9 @@ Kho mẫu để **hợp nhất mã nguồn Python thành một hệ thống th�
 
 ```bash
 python -m unified_system.cli providers
+python -m unified_system.cli providers --compact
 python -m unified_system.cli sync all --payload nightly
-python -m unified_system.cli sync github --payload repos
+python -m unified_system.cli sync github --payload repos --output json
 python -m unified_system.cli run sum 1 2 3
 ```
 

@@ -1,4 +1,12 @@
-from unified_system.core import ModuleRegistry, Provider, UnifiedSystem, build_default_system
+import pytest
+
+from unified_system.core import (
+    DEFAULT_PROVIDERS,
+    ModuleRegistry,
+    Provider,
+    UnifiedSystem,
+    build_default_system,
+)
 
 
 def test_register_and_dispatch() -> None:
@@ -11,13 +19,8 @@ def test_register_and_dispatch() -> None:
 def test_dispatch_missing_module() -> None:
     registry = ModuleRegistry()
 
-    try:
+    with pytest.raises(KeyError):
         registry.dispatch("missing")
-        raised = False
-    except KeyError:
-        raised = True
-
-    assert raised
 
 
 def test_unified_system_run() -> None:
@@ -34,7 +37,10 @@ def test_sync_one_provider() -> None:
     result = system.sync_provider("github", payload="repos")
 
     assert result.provider_key == "github"
+    assert result.provider_name == "GitHub"
+    assert result.provider_url == "https://docs.github.com"
     assert result.status == "synced"
+    assert result.payload == "repos"
     assert "repos" in result.message
 
 
@@ -53,3 +59,18 @@ def test_sync_all_returns_all_providers() -> None:
 
     assert len(records) == 5
     assert all(record.status == "synced" for record in records)
+
+
+def test_default_providers_export_is_stable() -> None:
+    assert [provider.key for provider in DEFAULT_PROVIDERS] == [
+        "chatgpt",
+        "codex",
+        "github",
+        "mdn-plus",
+        "openai",
+    ]
+
+
+def test_provider_validation_requires_https_url() -> None:
+    with pytest.raises(ValueError):
+        Provider("docs", "Docs", "http://example.com")

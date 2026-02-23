@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Callable
 
@@ -35,15 +35,38 @@ class Provider:
     display_name: str
     doc_url: str
 
+    def __post_init__(self) -> None:
+        if not self.key.strip():
+            raise ValueError("Provider key must not be empty.")
+        if not self.display_name.strip():
+            raise ValueError("Provider display_name must not be empty.")
+        if not self.doc_url.startswith("https://"):
+            raise ValueError("Provider doc_url must be an https URL.")
 
-@dataclass
+
+@dataclass(frozen=True)
 class SyncRecord:
     """State of a synchronization action for one provider."""
 
     provider_key: str
+    provider_name: str
+    provider_url: str
+    payload: str
     status: str
     message: str
     timestamp_utc: str
+
+    def to_dict(self) -> dict[str, str]:
+        return asdict(self)
+
+
+DEFAULT_PROVIDERS: tuple[Provider, ...] = (
+    Provider("chatgpt", "ChatGPT", "https://chatgpt.com"),
+    Provider("codex", "Codex", "https://developers.openai.com/codex"),
+    Provider("github", "GitHub", "https://docs.github.com"),
+    Provider("mdn-plus", "MDN Plus", "https://developer.mozilla.org/plus"),
+    Provider("openai", "OpenAI", "https://platform.openai.com/docs"),
+)
 
 
 class UnifiedSystem:
@@ -84,9 +107,13 @@ class UnifiedSystem:
                 f"Provider '{provider_key}' is not registered. Available: {available}"
             )
 
+        provider = self.providers[provider_key]
         result = self.sync_handlers[provider_key](payload)
         return SyncRecord(
-            provider_key=provider_key,
+            provider_key=provider.key,
+            provider_name=provider.display_name,
+            provider_url=provider.doc_url,
+            payload=payload,
             status="synced",
             message=result,
             timestamp_utc=datetime.now(timezone.utc).isoformat(),
@@ -107,13 +134,7 @@ def build_default_system() -> UnifiedSystem:
 
     system = UnifiedSystem()
 
-    for provider in (
-        Provider("chatgpt", "ChatGPT", "https://chatgpt.com"),
-        Provider("codex", "Codex", "https://developers.openai.com/codex"),
-        Provider("github", "GitHub", "https://docs.github.com"),
-        Provider("mdn-plus", "MDN Plus", "https://developer.mozilla.org/plus"),
-        Provider("openai", "OpenAI", "https://platform.openai.com/docs"),
-    ):
+    for provider in DEFAULT_PROVIDERS:
         system.register_provider(provider)
 
     system.add_module("echo", lambda text: text)

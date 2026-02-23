@@ -1,6 +1,7 @@
 """Unified system package for consolidating Python modules and providers."""
 
 from .core import (
+    DEFAULT_PROVIDERS,
     ModuleRegistry,
     Provider,
     SyncRecord,
@@ -9,6 +10,7 @@ from .core import (
 )
 
 __all__ = [
+    "DEFAULT_PROVIDERS",
     "ModuleRegistry",
     "Provider",
     "SyncRecord",

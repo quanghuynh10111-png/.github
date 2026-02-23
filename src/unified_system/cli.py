@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 import argparse
+import json
 
-from .core import UnifiedSystem, build_default_system
+from .core import SyncRecord, UnifiedSystem, build_default_system
 
 
 def build_system() -> UnifiedSystem:
     return build_default_system()
+
+
+def _print_sync_record(record: SyncRecord, output: str) -> None:
+    if output == "json":
+        print(json.dumps(record.to_dict(), ensure_ascii=False))
+        return
+
+    print(f"{record.provider_key}: {record.message}")
 
 
 def main() -> None:
@@ -25,6 +34,12 @@ def main() -> None:
     sync_parser = subcommands.add_parser("sync", help="Sync one or all providers")
     sync_parser.add_argument("provider", help="Provider key or 'all'")
     sync_parser.add_argument("--payload", default="default", help="Sync payload")
+    sync_parser.add_argument(
+        "--output",
+        choices=("text", "json"),
+        default="text",
+        help="Output format for sync command",
+    )
 
     parsed = parser.parse_args()
     system = build_system()
@@ -44,11 +59,11 @@ def main() -> None:
     if parsed.command == "sync":
         if parsed.provider == "all":
             for record in system.sync_all(payload=parsed.payload):
-                print(f"{record.provider_key}: {record.message}")
+                _print_sync_record(record, parsed.output)
             return
 
         record = system.sync_provider(parsed.provider, payload=parsed.payload)
-        print(f"{record.provider_key}: {record.message}")
+        _print_sync_record(record, parsed.output)
 
 
 if __name__ == "__main__":
